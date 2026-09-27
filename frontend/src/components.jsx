@@ -1,0 +1,13 @@
+import { BarChart3, Boxes, ClipboardList, FileText, LayoutDashboard, LogOut, Menu, Package, Users, X } from 'lucide-react';
+import { NavLink, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { useAuth } from './auth.jsx';
+
+const nav = [
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['SALES_REP', 'SALES_MANAGER', 'WAREHOUSE', 'FINANCE'] }, { to: '/orders', label: 'Sales orders', icon: ClipboardList, roles: ['SALES_REP', 'SALES_MANAGER', 'WAREHOUSE', 'FINANCE'] }, { to: '/customers', label: 'Customers', icon: Users, roles: ['SALES_REP', 'SALES_MANAGER'] }, { to: '/products', label: 'Products', icon: Package, roles: ['SALES_REP', 'SALES_MANAGER', 'WAREHOUSE'] }, { to: '/inventory', label: 'Inventory', icon: Boxes, roles: ['SALES_MANAGER', 'WAREHOUSE'] }, { to: '/invoices', label: 'Invoices', icon: FileText, roles: ['SALES_MANAGER', 'FINANCE'] }, { to: '/reports', label: 'Reports', icon: BarChart3, roles: ['SALES_MANAGER', 'FINANCE'] }
+];
+export function ProtectedRoute({ children, roles }) { const { user, ready } = useAuth(); if (!ready) return <div className="page-loading">Loading Nova ERP...</div>; if (!user) return <Navigate to="/login" replace />; if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />; return children; }
+export function AppLayout() {
+  const { user, logout } = useAuth(); const [open, setOpen] = useState(false); const location = useLocation(); const title = nav.find((item) => item.to === location.pathname)?.label || 'Nova ERP';
+  return <div className="app-shell"><aside className={`sidebar ${open ? 'sidebar-open' : ''}`}><div className="brand"><span className="brand-mark">N</span><span>Nova ERP</span><button className="icon-button close-nav" onClick={() => setOpen(false)} title="Close navigation"><X size={18} /></button></div><nav>{nav.filter((item) => item.roles.includes(user.role)).map(({ to, label, icon: Icon }) => <NavLink key={to} to={to} end={to === '/'} onClick={() => setOpen(false)}><Icon size={18} /><span>{label}</span></NavLink>)}</nav><div className="user-panel"><div className="user-avatar">{user.name.slice(0, 1)}</div><div><strong>{user.name}</strong><small>{user.role.replaceAll('_', ' ')}</small></div><button className="icon-button" onClick={logout} title="Sign out"><LogOut size={17} /></button></div></aside>{open && <button className="backdrop" aria-label="Close navigation" onClick={() => setOpen(false)} />}<main className="workspace"><header className="topbar"><button className="icon-button menu-button" onClick={() => setOpen(true)} title="Open navigation"><Menu size={20} /></button><div><p className="eyebrow">Operations</p><h1>{title}</h1></div></header><Outlet /></main></div>;
+}
